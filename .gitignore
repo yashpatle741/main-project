@@ -21,6 +21,6 @@ CLAUDE.md
 docs/skillpulse-cicd-guide.html
 docs/skillpulse-kubernetes-guide.html
 
-
+.env
 .k8s
 .docs
