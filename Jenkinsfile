@@ -7,7 +7,7 @@ pipeline {
 
     stages {
 
-        stage('Build Docker Images') {
+        stage('Build Docker Image') {
             steps {
                 sh 'docker compose build'
             }
