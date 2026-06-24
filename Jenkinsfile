@@ -3,41 +3,33 @@ pipeline {
 
     environment {
         DOCKERHUB_USERNAME = 'yashpatle99'
-        DB_USER = 'skillpulse'
-        DB_NAME = 'skillpulse'
-        DB_HOST = 'db'
-        DB_PORT = '3306'
     }
 
     stages {
 
-        stage('Create Env File') {
+        stage('Checkout') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
-                    string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD')
-                ]) {
-                    sh '''
-                    cat > .env << EOF
-                    MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
-                    DB_HOST=$DB_HOST
-                    DB_PORT=$DB_PORT
-                    DB_USER=$DB_USER
-                    DB_PASSWORD=$DB_PASSWORD
-                    DB_NAME=$DB_NAME
-                    DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
-                    EOF
-                    '''
-                }
+                git branch: 'main',
+                    url: 'https://github.com/yashpatle741/main-project.git'
             }
         }
 
-        stage('Build Docker Image') {
+       stage('Build Images') {
+    parallel {
+
+        stage('Build Backend') {
             steps {
-                sh 'docker compose build'
+                sh 'docker build -t skillpulse-backend ./backend'
             }
         }
 
+        stage('Build Frontend') {
+            steps {
+                sh 'docker build -t skillpulse-frontend ./frontend'
+            }
+        }
+    }
+}
         stage('Docker Login') {
             steps {
                 withCredentials([
@@ -54,21 +46,52 @@ pipeline {
             }
         }
 
-        stage('Push Backend Image') {
+    stage('Push Images') {
+    parallel {
+
+        stage('Push Backend') {
             steps {
-                sh 'docker push $DOCKERHUB_USERNAME/skillpulse-backend:latest'
+                sh """
+                docker tag skillpulse-backend ${DOCKERHUB_USERNAME}/skillpulse-backend:${BUILD_NUMBER}
+                docker push ${DOCKERHUB_USERNAME}/skillpulse-backend:${BUILD_NUMBER}
+                """
             }
         }
 
-        stage('Push Frontend Image') {
+        stage('Push Frontend') {
             steps {
-                sh 'docker push $DOCKERHUB_USERNAME/skillpulse-frontend:latest'
+                sh """
+                docker tag skillpulse-frontend ${DOCKERHUB_USERNAME}/skillpulse-frontend:${BUILD_NUMBER}
+                docker push ${DOCKERHUB_USERNAME}/skillpulse-frontend:${BUILD_NUMBER}
+                """
+            }
+        }
+    }
+}
+        stage('Deploy Kubernetes Resources') {
+            steps {
+                sh 'kubectl apply -R -f k8s/'
             }
         }
 
-        stage('Start Containers') {
+        stage('Update Deployment Image') {
             steps {
-                sh 'docker compose up -d'
+                sh """
+                kubectl set image deployment/backend \
+                backend=${DOCKERHUB_USERNAME}/skillpulse-backend:${BUILD_NUMBER} \
+                -n skillpulse
+
+                kubectl set image deployment/frontend \
+                frontend=${DOCKERHUB_USERNAME}/skillpulse-frontend:${BUILD_NUMBER} \
+                -n skillpulse
+                """
+            }
+        }
+
+        stage('Verify Rollout') {
+            steps {
+                sh 'kubectl rollout status deployment/backend -n skillpulse --timeout=120s'
+                sh 'kubectl rollout status deployment/frontend -n skillpulse --timeout=120s'
             }
         }
     }

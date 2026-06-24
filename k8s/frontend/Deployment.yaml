@@ -23,7 +23,7 @@ spec:
       containers:
         - name: frontend
           image: yashpatle99/skillpulse-frontend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 80

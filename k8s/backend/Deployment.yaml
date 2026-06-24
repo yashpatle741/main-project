@@ -23,7 +23,7 @@ spec:
       containers:
         - name: backend
           image: yashpatle99/skillpulse-backend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8080
