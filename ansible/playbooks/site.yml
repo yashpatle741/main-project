@@ -1,0 +1,49 @@
+---
+- name: Configure SkillPulse infrastructure nodes
+  hosts: all
+  gather_facts: true
+  become: true
+  tags:
+    - skillpulse
+    - bootstrap
+
+  roles:
+    - role: common
+      tags: [common]
+
+    - role: docker
+      when: install_docker | default(true)
+      tags: [docker]
+
+
+    - role: kind
+      when: install_kind | default(true)
+      tags: [kind]
+
+    - role: kubectl
+      when: install_kubectl | default(true)
+      tags: [kubectl]
+
+    - role: helm
+      when: install_helm | default(true)
+      tags: [helm]
+
+    - role: jenkins
+      when: install_jenkins | default(true)
+      tags: [jenkins]
+
+    - role: argocd
+      when: install_argocd | default(true)
+      tags: [argocd]
+
+    - role: monitoring
+      when: install_monitoring | default(true)
+      tags: [monitoring]
+
+    - role: skillpulse
+      when: install_skillpulse | default(true)
+      tags: [skillpulse]
+
+    - role: ingress-nginx
+      when: install_ingress_nginx | default(true)
+      tags: [ingress-nginx]

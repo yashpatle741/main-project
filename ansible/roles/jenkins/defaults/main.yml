@@ -1,0 +1,13 @@
+---
+jenkins_version: "2.516.1"
+jenkins_package_state: present
+jenkins_service_name: jenkins
+jenkins_java_package: openjdk-21-jdk
+jenkins_download_dir: /tmp/jenkins
+jenkins_deb_filename: jenkins_{{ jenkins_version }}_all.deb
+jenkins_deb_url: https://get.jenkins.io/debian-stable/{{ jenkins_deb_filename }}
+jenkins_deb_path: "{{ jenkins_download_dir }}/{{ jenkins_deb_filename }}"
+jenkins_supported_releases:
+  - "jammy"
+  - "noble"
+  - "resolute"

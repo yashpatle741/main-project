@@ -24,3 +24,15 @@ docs/skillpulse-kubernetes-guide.html
 .env
 .k8s
 .docs
+# Terraform local state and temporary files
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+*.tfvars
+*.tfbackup
+
+# OS files
+.DS_Store
+Thumbs.db

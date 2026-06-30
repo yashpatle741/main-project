@@ -1,0 +1,172 @@
+---
+- name: Gather system facts
+  ansible.builtin.setup:
+
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in skillpulse_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Copy SkillPulse Kubernetes manifests
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../k8s/"
+    dest: "{{ skillpulse_manifest_dir }}/"
+    mode: "0755"
+
+- name: Apply SkillPulse manifests with kubectl
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  block:
+    - name: Apply SkillPulse namespace manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/namespace/namespace.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse ConfigMap manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/mysql/ConfigMap.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse Secret manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/mysql/Secret.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse MySQL StatefulSet manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/mysql/StatefulSet.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse MySQL Service manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/mysql/Service.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse Backend Deployment manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/backend/Deployment.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse Backend Service manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/backend/Service.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse Frontend Deployment manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/frontend/Deployment.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse Frontend Service manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/frontend/Service.yaml"
+      changed_when: false
+
+    - name: Apply SkillPulse Ingress manifest
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "{{ skillpulse_manifest_dir }}/ingress/ingress.yaml"
+      changed_when: false
+
+    - name: Wait for SkillPulse pods to be Ready
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - wait
+          - --namespace
+          - "{{ skillpulse_namespace }}"
+          - --for=condition=Ready
+          - pod
+          - --all
+          - --timeout={{ skillpulse_wait_timeout }}s
+      register: skillpulse_wait
+      changed_when: false
+      failed_when: skillpulse_wait.rc != 0
+
+    - name: Verify SkillPulse pods
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - pods
+          - --namespace
+          - "{{ skillpulse_namespace }}"
+      register: skillpulse_pods_check
+      changed_when: false
+      failed_when: false
+
+    - name: Verify SkillPulse services
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - svc
+          - --namespace
+          - "{{ skillpulse_namespace }}"
+      register: skillpulse_svc_check
+      changed_when: false
+      failed_when: false
+
+    - name: Verify SkillPulse ingress
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - ingress
+          - --namespace
+          - "{{ skillpulse_namespace }}"
+      register: skillpulse_ingress_check
+      changed_when: false
+      failed_when: false
+
+    - name: Assert SkillPulse verification succeeded
+      ansible.builtin.assert:
+        that:
+          - skillpulse_pods_check.rc == 0
+          - skillpulse_svc_check.rc == 0
+          - skillpulse_ingress_check.rc == 0
+        fail_msg: "SkillPulse deployment verification failed."
+        success_msg: "SkillPulse deployment verified successfully."

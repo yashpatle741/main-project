@@ -1,0 +1,14 @@
+---
+monitoring_namespace: monitoring
+monitoring_release_name: kube-prometheus-stack
+monitoring_chart_repo_name: prometheus-community
+monitoring_chart_repo_url: https://prometheus-community.github.io/helm-charts
+monitoring_chart_name: kube-prometheus-stack
+monitoring_chart_version: "72.2.0"
+monitoring_wait_timeout: 600
+
+kubeconfig_path: "/home/ubuntu/.kube/config"
+monitoring_supported_releases:
+  - "jammy"
+  - "noble"
+  - "resolute"

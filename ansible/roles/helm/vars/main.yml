@@ -1,0 +1,6 @@
+---
+helm_archive_url: https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz
+helm_archive_name: helm-{{ helm_version }}-linux-amd64.tar.gz
+helm_archive_path: "{{ helm_download_dir }}/{{ helm_archive_name }}"
+helm_extract_dir: "{{ helm_download_dir }}/extract"
+helm_binary_name: linux-amd64/helm

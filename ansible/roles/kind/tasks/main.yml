@@ -1,0 +1,70 @@
+---
+- name: Gather system facts
+  ansible.builtin.setup:
+
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in kind_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Ensure the installation directory exists
+  ansible.builtin.file:
+    path: "{{ kind_install_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Check whether Kind is already installed
+  ansible.builtin.stat:
+    path: "{{ kind_binary_path }}"
+  register: kind_binary_stat
+
+- name: Read the installed Kind version if present
+  ansible.builtin.command:
+    argv:
+      - "{{ kind_binary_path }}"
+      - --version
+  register: kind_current_version_check
+  changed_when: false
+  failed_when: false
+  when: kind_binary_stat.stat.exists
+
+- name: Determine whether Kind needs installation
+  ansible.builtin.set_fact:
+    kind_install_required: >-
+      {{ not kind_binary_stat.stat.exists or
+      (kind_current_version_check.stdout | default('')) is not search(kind_version | regex_replace('^v', '')) }}
+
+- name: Download the Kind binary
+  ansible.builtin.get_url:
+    url: "{{ _kind_download_url }}"
+    dest: "{{ kind_binary_path }}"
+    mode: "0755"
+    owner: root
+    group: root
+  when: kind_install_required
+
+- name: Ensure the Kind binary is executable
+  ansible.builtin.file:
+    path: "{{ kind_binary_path }}"
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Verify Kind installation
+  ansible.builtin.command:
+    argv:
+      - "{{ kind_binary_path }}"
+      - --version
+  register: kind_verification
+  changed_when: false
+  failed_when: false
+
+- name: Assert Kind verification succeeded
+  ansible.builtin.assert:
+    that:
+      - kind_verification.rc == 0
+    fail_msg: "Kind installation verification failed."
+    success_msg: "Kind installation verified successfully."

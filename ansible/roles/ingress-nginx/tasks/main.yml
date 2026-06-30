@@ -1,0 +1,103 @@
+---
+- name: Gather system facts
+  ansible.builtin.setup:
+
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in ingress_nginx_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Configure Ingress NGINX
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  block:
+
+    - name: Add the ingress-nginx Helm repository
+      ansible.builtin.command:
+        argv:
+          - helm
+          - repo
+          - add
+          - "{{ ingress_nginx_chart_repo_name }}"
+          - "{{ ingress_nginx_chart_repo_url }}"
+      register: ingress_nginx_repo_add
+      changed_when: "'already exists' not in (ingress_nginx_repo_add.stderr | default(''))"
+      failed_when: false
+
+    - name: Update Helm repositories
+      ansible.builtin.command:
+        argv:
+          - helm
+          - repo
+          - update
+      register: ingress_nginx_repo_update
+      changed_when: false
+      failed_when: ingress_nginx_repo_update.rc != 0
+
+    - name: Install or upgrade ingress-nginx
+      ansible.builtin.shell: |
+        export KUBECONFIG={{ kubeconfig_path }}
+        helm upgrade --install {{ ingress_nginx_release_name }} \
+          {{ ingress_nginx_chart_repo_name }}/{{ ingress_nginx_chart_name }} \
+          --namespace {{ ingress_nginx_namespace }} \
+          --create-namespace \
+          --version {{ ingress_nginx_chart_version }} \
+          --set controller.service.type=ClusterIP
+      args:
+        executable: /bin/bash
+      register: ingress_nginx_install
+      changed_when: >
+        'STATUS: deployed' in (ingress_nginx_install.stdout | default('')) or
+        'STATUS: upgraded' in (ingress_nginx_install.stdout | default(''))
+      failed_when: ingress_nginx_install.rc != 0
+
+    - name: Wait for ingress-nginx pods to be Ready
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - wait
+          - --namespace
+          - "{{ ingress_nginx_namespace }}"
+          - --for=condition=Ready
+          - pod
+          - --all
+          - "--timeout={{ ingress_nginx_wait_timeout }}s"
+      register: ingress_nginx_wait
+      changed_when: false
+      failed_when: ingress_nginx_wait.rc != 0
+
+    - name: Verify ingress-nginx pods
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - pods
+          - -n
+          - "{{ ingress_nginx_namespace }}"
+      register: ingress_nginx_pods_check
+      changed_when: false
+      failed_when: false
+
+    - name: Verify ingress-nginx services
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - svc
+          - -n
+          - "{{ ingress_nginx_namespace }}"
+      register: ingress_nginx_svc_check
+      changed_when: false
+      failed_when: false
+
+    - name: Assert ingress-nginx verification succeeded
+      ansible.builtin.assert:
+        that:
+          - ingress_nginx_pods_check.rc == 0
+          - ingress_nginx_svc_check.rc == 0
+        fail_msg: "Ingress NGINX deployment verification failed."
+        success_msg: "Ingress NGINX deployment verified successfully."

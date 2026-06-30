@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: docker
+  author: SkillPulse
+  description: Production-ready Docker installation for Ubuntu 24.04 LTS
+  company: SkillPulse
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - "24.04"
+  galaxy_tags:
+    - docker
+    - containers
+    - devops
+    - ubuntu
+    - skillpulse
+dependencies: []

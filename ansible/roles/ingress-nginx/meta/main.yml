@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  role_name: ingress_nginx
+  author: SkillPulse
+  description: Production-ready ingress-nginx deployment for Ubuntu 22.04, 24.04, and 26.04
+  company: SkillPulse
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - "22.04"
+        - "24.04"
+        - "26.04"
+  galaxy_tags:
+    - ingress
+    - nginx
+    - kubernetes
+    - helm
+    - ubuntu
+dependencies: []

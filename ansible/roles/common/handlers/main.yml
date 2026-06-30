@@ -1,0 +1,10 @@
+---
+- name: clean apt cache
+  ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+
+- name: reboot host
+  ansible.builtin.reboot:
+    msg: "Reboot initiated by Ansible after package updates"
+    reboot_timeout: 1800

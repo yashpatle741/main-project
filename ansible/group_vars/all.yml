@@ -1,0 +1,35 @@
+
+
+common_project_name: "skillpulse"
+common_environments: "dev"
+
+common_hostname: "skillpulse-server"
+common_timezone: "Asia/Kolkata"
+
+common_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - software-properties-common
+  - unzip
+  - apt-transport-https
+  - git
+  - jq
+  - net-tools
+
+docker_users:
+  - ubuntu
+
+kind_version: "v0.22.0"
+kubectl_version: "v1.30.0"
+helm_version: "v3.15.3"
+
+jenkins_http_port: 8080
+jenkins_agent_port: 50000
+
+argocd_namespace: "argocd"
+argocd_version: "v2.11.0"
+
+prometheus_version: "v2.53.0"
+grafana_version: "10.4.5"

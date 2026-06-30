@@ -1,0 +1,8 @@
+---
+kind_version: "v0.30.0"
+kind_install_dir: /usr/local/bin
+kind_binary_path: /usr/local/bin/kind
+kind_supported_releases:
+  - "jammy"
+  - "noble"
+  - "resolute"

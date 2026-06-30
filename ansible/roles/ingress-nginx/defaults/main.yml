@@ -1,0 +1,15 @@
+---
+ingress_nginx_namespace: ingress-nginx
+ingress_nginx_release_name: ingress-nginx
+ingress_nginx_chart_repo_name: ingress-nginx
+ingress_nginx_chart_repo_url: https://kubernetes.github.io/ingress-nginx
+ingress_nginx_chart_name: ingress-nginx
+ingress_nginx_chart_version: "4.12.1"
+ingress_nginx_wait_timeout: 600
+
+kubeconfig_path: /home/ubuntu/.kube/config
+
+ingress_nginx_supported_releases:
+  - "jammy"
+  - "noble"
+  - "resolute"

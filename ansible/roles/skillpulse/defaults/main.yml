@@ -1,0 +1,11 @@
+---
+skillpulse_namespace: skillpulse
+skillpulse_manifest_dir: /home/yash/projects/Main Project/k8s
+
+kubeconfig_path: "/home/ubuntu/.kube/config"
+skillpulse_manifest_dir: "/tmp/skillpulse-k8s"
+skillpulse_supported_releases:
+  - "jammy"
+  - "noble"
+  - "resolute"
+skillpulse_wait_timeout: 600

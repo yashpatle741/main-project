@@ -1,0 +1,12 @@
+---
+skillpulse_manifest_files:
+  - namespace/namespace.yaml
+  - mysql/ConfigMap.yaml
+  - mysql/Secret.yaml
+  - mysql/StatefulSet.yaml
+  - mysql/Service.yaml
+  - backend/Deployment.yaml
+  - backend/Service.yaml
+  - frontend/Deployment.yaml
+  - frontend/Service.yaml
+  - ingress/ingress.yaml

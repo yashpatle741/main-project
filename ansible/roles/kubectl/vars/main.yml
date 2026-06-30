@@ -1,0 +1,2 @@
+---
+kubectl_download_url: https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl

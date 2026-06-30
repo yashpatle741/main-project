@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  role_name: common
+  author: skillpulse
+  description: Base OS hardening and package management for SkillPulse hosts
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+dependencies: []
+
+collections:
+  - community.general

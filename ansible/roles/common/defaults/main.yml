@@ -1,0 +1,13 @@
+---
+# Default variables for the common role.
+common_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - software-properties-common
+  - git
+  - jq
+
+common_hostname: "{{ inventory_hostname }}"
+common_timezone: "Etc/UTC"

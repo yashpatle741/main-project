@@ -1,0 +1,10 @@
+---
+helm_version: "v3.19.0"
+helm_install_dir: /usr/local/bin
+helm_binary_path: /usr/local/bin/helm
+helm_download_dir: /tmp/helm-install
+helm_binary_name: helm
+helm_supported_releases:
+  - "jammy"
+  - "noble"
+  - "resolute"
