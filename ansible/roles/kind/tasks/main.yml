@@ -10,61 +10,83 @@
     fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
     success_msg: "Operating system support validated for Ubuntu."
 
-- name: Ensure the installation directory exists
+- name: Check existing Kind clusters
+  become: false
+  ansible.builtin.command:
+    argv:
+      - kind
+      - get
+      - clusters
+  register: kind_clusters
+  changed_when: false
+  failed_when: false
+
+- name: Copy Kind configuration
+  ansible.builtin.template:
+    src: kind-config.yaml.j2
+    dest: /tmp/kind-config.yaml
+    mode: "0644"
+
+- name: Create Kind cluster
+  become: false
+  ansible.builtin.command:
+    argv:
+      - kind
+      - create
+      - cluster
+      - --name
+      - "{{ kind_cluster_name }}"
+      - --config
+      - /tmp/kind-config.yaml
+  when: kind_cluster_name not in kind_clusters.stdout
+
+- name: Wait for Kubernetes API to become ready
+  become: false
+  ansible.builtin.shell: |
+    export KUBECONFIG=/home/ubuntu/.kube/config
+    kubectl cluster-info
+  args:
+    executable: /bin/bash
+  register: kubectl_cluster_info
+  retries: 30
+  delay: 10
+  until: kubectl_cluster_info.rc == 0
+  changed_when: false
+
+- name: Ensure .kube directory exists
+  become: false
   ansible.builtin.file:
-    path: "{{ kind_install_dir }}"
+    path: /home/ubuntu/.kube
     state: directory
-    mode: "0755"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0700"
 
-- name: Check whether Kind is already installed
-  ansible.builtin.stat:
-    path: "{{ kind_binary_path }}"
-  register: kind_binary_stat
+- name: Export Kind kubeconfig
+  become: false
+  ansible.builtin.shell: |
+    export HOME=/home/ubuntu
+    export KUBECONFIG=/home/ubuntu/.kube/config
+    kind export kubeconfig --name {{ kind_cluster_name }}
+  args:
+    executable: /bin/bash
+  changed_when: false
 
-- name: Read the installed Kind version if present
+- name: Verify Kubernetes cluster
+  become: false
+  environment:
+    KUBECONFIG: /home/ubuntu/.kube/config
   ansible.builtin.command:
     argv:
-      - "{{ kind_binary_path }}"
-      - --version
-  register: kind_current_version_check
+      - kubectl
+      - get
+      - nodes
+  register: kubectl_nodes
   changed_when: false
-  failed_when: false
-  when: kind_binary_stat.stat.exists
 
-- name: Determine whether Kind needs installation
-  ansible.builtin.set_fact:
-    kind_install_required: >-
-      {{ not kind_binary_stat.stat.exists or
-      (kind_current_version_check.stdout | default('')) is not search(kind_version | regex_replace('^v', '')) }}
-
-- name: Download the Kind binary
-  ansible.builtin.get_url:
-    url: "{{ _kind_download_url }}"
-    dest: "{{ kind_binary_path }}"
-    mode: "0755"
-    owner: root
-    group: root
-  when: kind_install_required
-
-- name: Ensure the Kind binary is executable
-  ansible.builtin.file:
-    path: "{{ kind_binary_path }}"
-    mode: "0755"
-    owner: root
-    group: root
-
-- name: Verify Kind installation
-  ansible.builtin.command:
-    argv:
-      - "{{ kind_binary_path }}"
-      - --version
-  register: kind_verification
-  changed_when: false
-  failed_when: false
-
-- name: Assert Kind verification succeeded
+- name: Assert Kind cluster is ready
   ansible.builtin.assert:
     that:
-      - kind_verification.rc == 0
-    fail_msg: "Kind installation verification failed."
-    success_msg: "Kind installation verified successfully."
+      - kubectl_nodes.rc == 0
+    fail_msg: "Kind cluster verification failed."
+    success_msg: "Kind cluster is ready."

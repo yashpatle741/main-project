@@ -6,3 +6,5 @@ kind_supported_releases:
   - "jammy"
   - "noble"
   - "resolute"
+  
+kind_cluster_name: skillpulse

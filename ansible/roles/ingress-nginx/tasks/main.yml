@@ -46,7 +46,7 @@
           --namespace {{ ingress_nginx_namespace }} \
           --create-namespace \
           --version {{ ingress_nginx_chart_version }} \
-          --set controller.service.type=ClusterIP
+          --set controller.service.type=NodePort
       args:
         executable: /bin/bash
       register: ingress_nginx_install
