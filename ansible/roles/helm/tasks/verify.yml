@@ -1,0 +1,17 @@
+---
+- name: Verify Helm installation
+  ansible.builtin.command:
+    argv:
+      - "{{ helm_binary_path }}"
+      - version
+      - --short
+  register: helm_verification
+  changed_when: false
+  failed_when: helm_verification.rc != 0
+
+- name: Assert Helm verification succeeded
+  ansible.builtin.assert:
+    that:
+      - helm_verification.rc == 0
+    fail_msg: "Helm installation verification failed."
+    success_msg: "Helm installation verified successfully."

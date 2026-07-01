@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: DevOps Team
+  company: SkillPulse
+  description: Configure Prometheus Ingress for Kubernetes cluster
+  issue_tracker_url: https://github.com/yashpatle741/main-project/issues
+  license: MIT
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+        - resolute
+
+dependencies: []

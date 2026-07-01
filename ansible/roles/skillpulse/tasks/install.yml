@@ -1,0 +1,60 @@
+---
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in skillpulse_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Prepare SkillPulse manifest directory
+  ansible.builtin.file:
+    path: "{{ skillpulse_manifest_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Copy SkillPulse Kubernetes manifests
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../k8s/"
+    dest: "{{ skillpulse_manifest_dir }}/"
+    mode: "0755"
+
+- name: Apply SkillPulse namespace manifest
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - apply
+      - -f
+      - "{{ skillpulse_manifest_dir }}/namespace/namespace.yaml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: skillpulse_namespace_apply
+  changed_when: >-
+    'created' in (skillpulse_namespace_apply.stdout | default('')) or
+    'configured' in (skillpulse_namespace_apply.stdout | default(''))
+  failed_when: skillpulse_namespace_apply.rc != 0
+
+- name: Apply SkillPulse manifests
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - apply
+      - -f
+      - "{{ item }}"
+  loop:
+    - "{{ skillpulse_manifest_dir }}/mysql/ConfigMap.yaml"
+    - "{{ skillpulse_manifest_dir }}/mysql/Secret.yaml"
+    - "{{ skillpulse_manifest_dir }}/mysql/StatefulSet.yaml"
+    - "{{ skillpulse_manifest_dir }}/mysql/Service.yaml"
+    - "{{ skillpulse_manifest_dir }}/backend/Deployment.yaml"
+    - "{{ skillpulse_manifest_dir }}/backend/Service.yaml"
+    - "{{ skillpulse_manifest_dir }}/frontend/Deployment.yaml"
+    - "{{ skillpulse_manifest_dir }}/frontend/Service.yaml"
+    - "{{ skillpulse_manifest_dir }}/ingress/ingress.yaml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: skillpulse_resource_apply
+  changed_when: >-
+    'created' in (skillpulse_resource_apply.stdout | default('')) or
+    'configured' in (skillpulse_resource_apply.stdout | default(''))
+  failed_when: skillpulse_resource_apply.rc != 0

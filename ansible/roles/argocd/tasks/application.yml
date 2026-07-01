@@ -1,0 +1,53 @@
+---
+- name: Generate ArgoCD application manifest
+  ansible.builtin.template:
+    src: application.yaml.j2
+    dest: /tmp/application.yaml
+    mode: "0644"
+
+- name: Apply ArgoCD application
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - apply
+      - -f
+      - /tmp/application.yaml
+  register: argocd_application
+  changed_when: >-
+    'created' in (argocd_application.stdout | default('')) or
+    'configured' in (argocd_application.stdout | default(''))
+  failed_when: argocd_application.rc != 0
+
+- name: Wait for ArgoCD application to be created
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - wait
+      - application
+      - skillpulse
+      - -n
+      - "{{ argocd_namespace }}"
+      - --for=jsonpath={.status.sync.status}=Synced
+      - --timeout=300s
+  changed_when: false
+  failed_when: false
+
+- name: Verify ArgoCD application
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - application
+      - skillpulse
+      - -n
+      - "{{ argocd_namespace }}"
+  register: argocd_application_check
+  changed_when: false
+  failed_when: argocd_application_check.rc != 0
+
+- name: Assert ArgoCD application created
+  ansible.builtin.assert:
+    that:
+      - argocd_application_check.rc == 0
+    fail_msg: "ArgoCD Application creation failed."
+    success_msg: "ArgoCD Application created successfully."

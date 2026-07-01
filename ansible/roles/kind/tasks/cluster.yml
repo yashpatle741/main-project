@@ -1,0 +1,84 @@
+---
+- name: Check existing Kind clusters
+  ansible.builtin.command:
+    argv:
+      - "{{ kind_binary_path }}"
+      - get
+      - clusters
+  register: kind_clusters
+  changed_when: false
+  failed_when: false
+
+- name: Verify Docker daemon access for Kind
+  ansible.builtin.command:
+    argv:
+      - docker
+      - info
+  register: docker_info_check
+  changed_when: false
+  failed_when: docker_info_check.rc != 0
+
+- name: Copy Kind configuration
+  ansible.builtin.template:
+    src: kind-config.yaml.j2
+    dest: /tmp/kind-config.yaml
+    mode: "0644"
+
+- name: Create Kind cluster
+  ansible.builtin.command:
+    argv:
+      - "{{ kind_binary_path }}"
+      - create
+      - cluster
+      - --name
+      - "{{ kind_cluster_name }}"
+      - --config
+      - /tmp/kind-config.yaml
+  register: kind_cluster_create
+  when: kind_cluster_name not in kind_clusters.stdout
+  changed_when: kind_cluster_create.rc == 0
+  failed_when: kind_cluster_create.rc != 0
+
+- name: Ensure kubeconfig directory exists for ubuntu
+  ansible.builtin.file:
+    path: "{{ kubeconfig_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0700"
+
+- name: Export Kind kubeconfig
+  ansible.builtin.command:
+    argv:
+      - "{{ kind_binary_path }}"
+      - export
+      - kubeconfig
+      - --name
+      - "{{ kind_cluster_name }}"
+  environment:
+    HOME: /home/ubuntu
+  register: kind_kubeconfig_export
+  changed_when: false
+  failed_when: kind_kubeconfig_export.rc != 0
+
+- name: Wait for Kubernetes API to become ready
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - cluster-info
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: kubectl_cluster_info
+  retries: 30
+  delay: 10
+  until: kubectl_cluster_info.rc == 0
+  changed_when: false
+  failed_when: false
+
+- name: Assert Kind cluster is reachable
+  ansible.builtin.assert:
+    that:
+      - docker_info_check.rc == 0
+      - kubectl_cluster_info.rc == 0
+    fail_msg: "Kind cluster bootstrap did not become reachable. Verify Docker access and the cluster status."
+    success_msg: "Kind cluster API is reachable."

@@ -1,0 +1,47 @@
+---
+- name: Verify ingress-nginx pods
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - wait
+      - --namespace
+      - "{{ ingress_nginx_namespace }}"
+      - --for=condition=Ready
+      - pod
+      - --all
+      - "--timeout={{ ingress_nginx_wait_timeout }}s"
+  register: ingress_nginx_wait
+  changed_when: false
+  failed_when: ingress_nginx_wait.rc != 0
+
+- name: Verify ingress-nginx resources
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - pods
+      - -n
+      - "{{ ingress_nginx_namespace }}"
+  register: ingress_nginx_pods_check
+  changed_when: false
+  failed_when: ingress_nginx_pods_check.rc != 0
+
+- name: Verify ingress-nginx services
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - svc
+      - -n
+      - "{{ ingress_nginx_namespace }}"
+  register: ingress_nginx_svc_check
+  changed_when: false
+  failed_when: ingress_nginx_svc_check.rc != 0
+
+- name: Assert ingress-nginx verification succeeded
+  ansible.builtin.assert:
+    that:
+      - ingress_nginx_pods_check.rc == 0
+      - ingress_nginx_svc_check.rc == 0
+    fail_msg: "Ingress NGINX deployment verification failed."
+    success_msg: "Ingress NGINX deployment verified successfully."

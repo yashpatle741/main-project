@@ -1,0 +1,46 @@
+---
+- name: Ensure apt cache is updated
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+
+- name: Upgrade installed packages to the latest compatible version
+  ansible.builtin.apt:
+    upgrade: dist
+    autoremove: true
+    autoclean: true
+  register: common_apt_upgrade
+  when: ansible_os_family == 'Debian'
+  notify:
+    - clean apt cache
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: false
+  when:
+    - ansible_os_family == 'Debian'
+    - common_packages | length > 0
+
+- name: Ensure Python 3 is installed
+  ansible.builtin.apt:
+    name: python3
+    state: present
+    update_cache: false
+  when: ansible_os_family == 'Debian'
+
+- name: Set the system hostname
+  ansible.builtin.hostname:
+    name: "{{ common_hostname }}"
+  when:
+    - common_hostname is defined
+    - common_hostname | length > 0
+
+- name: Configure the system timezone
+  community.general.timezone:
+    name: "{{ common_timezone }}"
+  when:
+    - common_timezone is defined
+    - common_timezone | length > 0

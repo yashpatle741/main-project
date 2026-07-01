@@ -1,10 +1,13 @@
 ---
 kind_version: "v0.30.0"
+kind_arch: amd64
 kind_install_dir: /usr/local/bin
 kind_binary_path: /usr/local/bin/kind
+kind_download_url: "https://kind.sigs.k8s.io/dl/{{ kind_version }}/kind-linux-{{ kind_arch }}"
+kubeconfig_dir: /home/ubuntu/.kube
+kubeconfig_path: "{{ kubeconfig_dir }}/config"
 kind_supported_releases:
   - "jammy"
   - "noble"
   - "resolute"
-  
 kind_cluster_name: skillpulse

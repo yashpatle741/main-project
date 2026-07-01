@@ -1,0 +1,34 @@
+---
+- name: Wait for ArgoCD pods to be Ready
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - wait
+      - --namespace
+      - "{{ argocd_namespace }}"
+      - --for=condition=Ready
+      - pod
+      - --all
+      - "--timeout={{ argocd_wait_timeout }}s"
+  register: argocd_wait
+  changed_when: false
+  failed_when: argocd_wait.rc != 0
+
+- name: Verify ArgoCD installation
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - pods
+      - -n
+      - "{{ argocd_namespace }}"
+  register: argocd_pods_check
+  changed_when: false
+  failed_when: argocd_pods_check.rc != 0
+
+- name: Assert ArgoCD verification succeeded
+  ansible.builtin.assert:
+    that:
+      - argocd_pods_check.rc == 0
+    fail_msg: "ArgoCD installation verification failed."
+    success_msg: "ArgoCD installation verified successfully."

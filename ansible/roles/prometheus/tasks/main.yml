@@ -1,0 +1,42 @@
+---
+- name: Render Prometheus Ingress template
+  ansible.builtin.template:
+    src: ingress.yaml.j2
+    dest: /tmp/prometheus-ingress.yaml
+    mode: '0644'
+  register: prometheus_ingress_template
+  changed_when: true
+
+- name: Apply Prometheus Ingress
+  ansible.builtin.shell: |
+    kubectl apply -f /tmp/prometheus-ingress.yaml
+  args:
+    executable: /bin/bash
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  become: false
+  register: prometheus_ingress_apply
+  changed_when: "'created' in prometheus_ingress_apply.stdout or 'configured' in prometheus_ingress_apply.stdout"
+
+- name: Verify Prometheus Ingress exists
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - ingress
+      - prometheus-ingress
+      - --namespace
+      - "{{ prometheus_namespace }}"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  become: false
+  register: prometheus_ingress_verify
+  changed_when: false
+  failed_when: prometheus_ingress_verify.rc != 0
+
+- name: Assert Prometheus Ingress verification succeeded
+  ansible.builtin.assert:
+    that:
+      - prometheus_ingress_verify.rc == 0
+    fail_msg: "Prometheus Ingress verification failed."
+    success_msg: "Prometheus Ingress verified successfully."

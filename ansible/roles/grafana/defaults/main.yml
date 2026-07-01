@@ -1,0 +1,7 @@
+---
+grafana_namespace: monitoring
+grafana_ingress_host: "grafana.skillpulse.local"
+grafana_ingress_service: "kube-prometheus-stack-grafana"
+grafana_ingress_port: 80
+
+kubeconfig_path: "/home/ubuntu/.kube/config"

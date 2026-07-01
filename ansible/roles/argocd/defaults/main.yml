@@ -15,3 +15,6 @@ kubeconfig_path: "/home/ubuntu/.kube/config"
 gitops_repo_url: "https://github.com/yashpatle741/main-project-gitops.git"
 gitops_branch: "main"
 gitops_path: "k8s"
+argocd_ingress_host: "argocd.skillpulse.local"
+argocd_ingress_service: "argocd-server"
+argocd_ingress_port: 80

@@ -1,8 +1,12 @@
 ---
 helm_version: "v3.19.0"
+helm_arch: amd64
 helm_install_dir: /usr/local/bin
 helm_binary_path: /usr/local/bin/helm
 helm_download_dir: /tmp/helm-install
+helm_archive_url: "https://get.helm.sh/helm-{{ helm_version }}-linux-{{ helm_arch }}.tar.gz"
+helm_archive_path: "{{ helm_download_dir }}/helm-{{ helm_version }}-linux-{{ helm_arch }}.tar.gz"
+helm_extract_dir: "{{ helm_download_dir }}/extract"
 helm_binary_name: helm
 helm_supported_releases:
   - "jammy"

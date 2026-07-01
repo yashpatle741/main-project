@@ -1,0 +1,17 @@
+---
+- name: Verify kubectl installation
+  ansible.builtin.command:
+    argv:
+      - "{{ kubectl_binary_path }}"
+      - version
+      - --client
+  register: kubectl_verification
+  changed_when: false
+  failed_when: kubectl_verification.rc != 0
+
+- name: Assert kubectl verification succeeded
+  ansible.builtin.assert:
+    that:
+      - kubectl_verification.rc == 0
+    fail_msg: "kubectl installation verification failed."
+    success_msg: "kubectl installation verified successfully."

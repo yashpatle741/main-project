@@ -1,0 +1,27 @@
+---
+- name: Verify Docker CLI installation
+  ansible.builtin.command:
+    argv:
+      - docker
+      - --version
+  register: docker_version_check
+  changed_when: false
+  failed_when: docker_version_check.rc != 0
+
+- name: Verify Docker Compose plugin
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - version
+  register: docker_compose_check
+  changed_when: false
+  failed_when: docker_compose_check.rc != 0
+
+- name: Assert Docker verification succeeded
+  ansible.builtin.assert:
+    that:
+      - docker_version_check.rc == 0
+      - docker_compose_check.rc == 0
+    fail_msg: "Docker installation verification failed. Docker CLI or Compose plugin is not working correctly."
+    success_msg: "Docker installation verified successfully."

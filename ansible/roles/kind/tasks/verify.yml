@@ -1,0 +1,29 @@
+---
+- name: Verify Kind installation
+  ansible.builtin.command:
+    argv:
+      - "{{ kind_binary_path }}"
+      - version
+  register: kind_version_check
+  changed_when: false
+  failed_when: kind_version_check.rc != 0
+
+- name: Verify Kubernetes cluster access
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - nodes
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: kubectl_nodes
+  changed_when: false
+  failed_when: kubectl_nodes.rc != 0
+
+- name: Assert Kind cluster is ready
+  ansible.builtin.assert:
+    that:
+      - kind_version_check.rc == 0
+      - kubectl_nodes.rc == 0
+    fail_msg: "Kind cluster verification failed."
+    success_msg: "Kind cluster is ready."

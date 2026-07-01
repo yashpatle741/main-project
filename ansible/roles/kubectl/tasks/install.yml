@@ -1,0 +1,52 @@
+---
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in kubectl_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Ensure the installation directory exists
+  ansible.builtin.file:
+    path: "{{ kubectl_install_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Check whether kubectl is already installed
+  ansible.builtin.stat:
+    path: "{{ kubectl_binary_path }}"
+  register: kubectl_binary_stat
+
+- name: Read the installed kubectl version if present
+  ansible.builtin.command:
+    argv:
+      - "{{ kubectl_binary_path }}"
+      - version
+      - --client
+  register: kubectl_current_version_check
+  changed_when: false
+  failed_when: false
+  when: kubectl_binary_stat.stat.exists
+
+- name: Determine whether kubectl needs installation
+  ansible.builtin.set_fact:
+    kubectl_install_required: >-
+      {{ not kubectl_binary_stat.stat.exists or
+      (kubectl_current_version_check.stdout | default('')) is not search(kubectl_version | regex_replace('^v', '')) }}
+
+- name: Download kubectl
+  ansible.builtin.get_url:
+    url: "{{ kubectl_download_url }}"
+    dest: "{{ kubectl_binary_path }}"
+    mode: "0755"
+    owner: root
+    group: root
+  when: kubectl_install_required
+
+- name: Ensure kubectl is executable
+  ansible.builtin.file:
+    path: "{{ kubectl_binary_path }}"
+    mode: "0755"
+    owner: root
+    group: root

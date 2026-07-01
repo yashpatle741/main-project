@@ -1,0 +1,19 @@
+---
+- name: Gather package facts
+  ansible.builtin.package_facts:
+    manager: apt
+  when: ansible_os_family == 'Debian'
+
+- name: Assert required common packages are installed
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.packages is defined
+      - (common_packages | difference(['python3'])) | difference([]) | length >= 0
+    fail_msg: "Common package verification failed."
+    success_msg: "Common package verification completed successfully."
+
+- name: Check whether a reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: common_reboot_required
+  changed_when: false

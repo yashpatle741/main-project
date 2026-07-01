@@ -1,0 +1,7 @@
+---
+prometheus_namespace: monitoring
+prometheus_ingress_host: "prometheus.skillpulse.local"
+prometheus_ingress_service: "kube-prometheus-stack-prometheus"
+prometheus_ingress_port: 9090
+
+kubeconfig_path: "/home/ubuntu/.kube/config"

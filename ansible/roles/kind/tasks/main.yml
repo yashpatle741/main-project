@@ -2,91 +2,11 @@
 - name: Gather system facts
   ansible.builtin.setup:
 
-- name: Verify operating system support
-  ansible.builtin.assert:
-    that:
-      - ansible_distribution == "Ubuntu"
-      - ansible_distribution_release in kind_supported_releases
-    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
-    success_msg: "Operating system support validated for Ubuntu."
+- name: Import Kind installation tasks
+  ansible.builtin.import_tasks: install.yml
 
-- name: Check existing Kind clusters
-  become: false
-  ansible.builtin.command:
-    argv:
-      - kind
-      - get
-      - clusters
-  register: kind_clusters
-  changed_when: false
-  failed_when: false
+- name: Import Kind cluster tasks
+  ansible.builtin.import_tasks: cluster.yml
 
-- name: Copy Kind configuration
-  ansible.builtin.template:
-    src: kind-config.yaml.j2
-    dest: /tmp/kind-config.yaml
-    mode: "0644"
-
-- name: Create Kind cluster
-  become: false
-  ansible.builtin.command:
-    argv:
-      - kind
-      - create
-      - cluster
-      - --name
-      - "{{ kind_cluster_name }}"
-      - --config
-      - /tmp/kind-config.yaml
-  when: kind_cluster_name not in kind_clusters.stdout
-
-- name: Wait for Kubernetes API to become ready
-  become: false
-  ansible.builtin.shell: |
-    export KUBECONFIG=/home/ubuntu/.kube/config
-    kubectl cluster-info
-  args:
-    executable: /bin/bash
-  register: kubectl_cluster_info
-  retries: 30
-  delay: 10
-  until: kubectl_cluster_info.rc == 0
-  changed_when: false
-
-- name: Ensure .kube directory exists
-  become: false
-  ansible.builtin.file:
-    path: /home/ubuntu/.kube
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-    mode: "0700"
-
-- name: Export Kind kubeconfig
-  become: false
-  ansible.builtin.shell: |
-    export HOME=/home/ubuntu
-    export KUBECONFIG=/home/ubuntu/.kube/config
-    kind export kubeconfig --name {{ kind_cluster_name }}
-  args:
-    executable: /bin/bash
-  changed_when: false
-
-- name: Verify Kubernetes cluster
-  become: false
-  environment:
-    KUBECONFIG: /home/ubuntu/.kube/config
-  ansible.builtin.command:
-    argv:
-      - kubectl
-      - get
-      - nodes
-  register: kubectl_nodes
-  changed_when: false
-
-- name: Assert Kind cluster is ready
-  ansible.builtin.assert:
-    that:
-      - kubectl_nodes.rc == 0
-    fail_msg: "Kind cluster verification failed."
-    success_msg: "Kind cluster is ready."
+- name: Import Kind verification tasks
+  ansible.builtin.import_tasks: verify.yml

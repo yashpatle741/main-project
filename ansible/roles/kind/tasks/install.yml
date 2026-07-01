@@ -1,0 +1,40 @@
+---
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in kind_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Check whether Kind is already installed
+  ansible.builtin.stat:
+    path: "{{ kind_binary_path }}"
+  register: kind_binary_stat
+
+- name: Check whether kubectl is already installed
+  ansible.builtin.stat:
+    path: "{{ kubectl_binary_path }}"
+  register: kubectl_binary_stat
+
+- name: Ensure kubectl is available for Kind cluster operations
+  ansible.builtin.include_role:
+    name: kubectl
+  when: not kubectl_binary_stat.stat.exists
+
+- name: Download Kind binary
+  ansible.builtin.get_url:
+    url: "{{ kind_download_url }}"
+    dest: /tmp/kind
+    mode: "0755"
+  when: not kind_binary_stat.stat.exists
+
+- name: Install Kind binary
+  ansible.builtin.copy:
+    src: /tmp/kind
+    dest: "{{ kind_binary_path }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0755"
+  when: not kind_binary_stat.stat.exists

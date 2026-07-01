@@ -1,0 +1,60 @@
+---
+- name: Wait for SkillPulse pods to be Ready
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - wait
+      - --namespace
+      - "{{ skillpulse_namespace }}"
+      - --for=condition=Ready
+      - pod
+      - --all
+      - "--timeout={{ skillpulse_wait_timeout }}s"
+  register: skillpulse_wait
+  changed_when: false
+  failed_when: skillpulse_wait.rc != 0
+
+- name: Verify SkillPulse pods
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - pods
+      - --namespace
+      - "{{ skillpulse_namespace }}"
+  register: skillpulse_pods_check
+  changed_when: false
+  failed_when: skillpulse_pods_check.rc != 0
+
+- name: Verify SkillPulse services
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - svc
+      - --namespace
+      - "{{ skillpulse_namespace }}"
+  register: skillpulse_svc_check
+  changed_when: false
+  failed_when: skillpulse_svc_check.rc != 0
+
+- name: Verify SkillPulse ingress
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - ingress
+      - --namespace
+      - "{{ skillpulse_namespace }}"
+  register: skillpulse_ingress_check
+  changed_when: false
+  failed_when: skillpulse_ingress_check.rc != 0
+
+- name: Assert SkillPulse verification succeeded
+  ansible.builtin.assert:
+    that:
+      - skillpulse_pods_check.rc == 0
+      - skillpulse_svc_check.rc == 0
+      - skillpulse_ingress_check.rc == 0
+    fail_msg: "SkillPulse deployment verification failed."
+    success_msg: "SkillPulse deployment verified successfully."

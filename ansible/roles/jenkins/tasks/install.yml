@@ -1,0 +1,51 @@
+---
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in jenkins_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Install OpenJDK 21
+  ansible.builtin.apt:
+    name: "{{ jenkins_java_package }}"
+    state: present
+    update_cache: true
+
+- name: Ensure the Jenkins download directory exists
+  ansible.builtin.file:
+    path: "{{ jenkins_download_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Check whether the Jenkins package is already installed
+  ansible.builtin.package_facts:
+    manager: apt
+
+- name: Download the Jenkins .deb package
+  ansible.builtin.get_url:
+    url: "{{ jenkins_deb_url }}"
+    dest: "{{ jenkins_deb_path }}"
+    mode: "0644"
+  when: >-
+    (ansible_facts.packages['jenkins'] is not defined) or
+    (ansible_facts.packages['jenkins'][0].version | default('')) != jenkins_version
+
+- name: Install Jenkins from the downloaded .deb package
+  ansible.builtin.apt:
+    deb: "{{ jenkins_deb_path }}"
+    state: "{{ jenkins_package_state }}"
+  when: >-
+    (ansible_facts.packages['jenkins'] is not defined) or
+    (ansible_facts.packages['jenkins'][0].version | default('')) != jenkins_version
+
+- name: Enable the Jenkins service
+  ansible.builtin.service:
+    name: "{{ jenkins_service_name }}"
+    enabled: true
+
+- name: Start the Jenkins service
+  ansible.builtin.service:
+    name: "{{ jenkins_service_name }}"
+    state: started

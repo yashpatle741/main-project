@@ -1,0 +1,77 @@
+---
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in argocd_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Ensure ArgoCD namespace exists
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - create
+      - namespace
+      - "{{ argocd_namespace }}"
+      - --dry-run=client
+      - -o
+      - yaml
+  register: argocd_namespace_manifest
+  changed_when: false
+  failed_when: false
+
+- name: Apply ArgoCD namespace manifest
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - apply
+      - -f
+      - -
+    stdin: "{{ argocd_namespace_manifest.stdout }}"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  become: false
+  changed_when: false
+  failed_when: false
+
+- name: Add the official Argo Helm repository
+  ansible.builtin.command:
+    argv:
+      - helm
+      - repo
+      - add
+      - "{{ argocd_chart_repo_name }}"
+      - "{{ argocd_chart_repo_url }}"
+  register: argocd_repo_add
+  changed_when: "'already exists' not in (argocd_repo_add.stderr | default(''))"
+  failed_when: false
+
+- name: Update Helm repositories
+  ansible.builtin.command:
+    argv:
+      - helm
+      - repo
+      - update
+  register: argocd_repo_update
+  changed_when: false
+  failed_when: argocd_repo_update.rc != 0
+
+- name: Install or upgrade ArgoCD
+  ansible.builtin.command:
+    argv:
+      - helm
+      - upgrade
+      - --install
+      - "{{ argocd_release_name }}"
+      - "{{ argocd_chart_repo_name }}/{{ argocd_chart_name }}"
+      - --namespace
+      - "{{ argocd_namespace }}"
+      - --create-namespace
+      - --version
+      - "{{ argocd_chart_version }}"
+  register: argocd_install
+  changed_when: >-
+    'STATUS: deployed' in (argocd_install.stdout | default('')) or
+    'STATUS: upgraded' in (argocd_install.stdout | default(''))
+  failed_when: argocd_install.rc != 0
