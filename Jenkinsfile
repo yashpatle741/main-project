@@ -171,28 +171,31 @@ pipeline {
 }
 stage('Update GitOps Repository') {
     steps {
-        dir('gitops') {
-            deleteDir()
+        sshagent(credentials: ['github-ssh']) {
 
-            sh """
-                git clone git@github.com:yashpatle741/main-project-gitops.git .
+            dir('gitops') {
+                deleteDir()
 
-                sed -i 's|image: yashpatle99/skillpulse-backend:.*|image: yashpatle99/skillpulse-backend:${BUILD_NUMBER}|' k8s/backend/Deployment.yaml
+                sh """
+                    git clone git@github.com:yashpatle741/main-project-gitops.git .
 
-                sed -i 's|image: yashpatle99/skillpulse-frontend:.*|image: yashpatle99/skillpulse-frontend:${BUILD_NUMBER}|' k8s/frontend/Deployment.yaml
+                    sed -i 's|image: yashpatle99/skillpulse-backend:.*|image: yashpatle99/skillpulse-backend:${BUILD_NUMBER}|' k8s/backend/Deployment.yaml
 
-                git config user.name "Jenkins"
-                git config user.email "jenkins@local"
+                    sed -i 's|image: yashpatle99/skillpulse-frontend:.*|image: yashpatle99/skillpulse-frontend:${BUILD_NUMBER}|' k8s/frontend/Deployment.yaml
 
-                git add .
+                    git config user.name "Jenkins"
+                    git config user.email "jenkins@local"
 
-                git diff --cached --quiet || git commit -m "Update images to build ${BUILD_NUMBER}"
+                    git add .
 
-                git push origin main
-            """
+                    git diff --cached --quiet || git commit -m "Update images to build ${BUILD_NUMBER}"
+
+                    git push origin main
+                """
+            }
+
         }
     }
 }
-      
     }
 }
