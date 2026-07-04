@@ -169,7 +169,6 @@ pipeline {
         }
     }
 }
-
 stage('Update GitOps Repository') {
     steps {
         sshagent(credentials: ['github-ssh']) {
@@ -198,4 +197,6 @@ stage('Update GitOps Repository') {
         }
     }
 }
+      
+    }
 }
