@@ -169,6 +169,16 @@ pipeline {
         }
     }
 }
+stage('Test SSH') {
+    steps {
+        sshagent(credentials: ['github-ssh']) {
+            sh '''
+                ssh-add -L
+                ssh -o StrictHostKeyChecking=no -T git@github.com || true
+            '''
+        }
+    }
+}
 stage('Updates GitOps Repository') {
     steps {
         dir('gitops') {
