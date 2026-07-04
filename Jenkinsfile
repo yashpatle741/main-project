@@ -169,40 +169,33 @@ pipeline {
         }
     }
 }
-stage('Test SSH') {
+
+stage('Update GitOps Repository') {
     steps {
         sshagent(credentials: ['github-ssh']) {
-            sh '''
-                ssh-add -L
-                ssh -o StrictHostKeyChecking=no -T git@github.com || true
-            '''
+
+            dir('gitops') {
+                deleteDir()
+
+                sh """
+                    git clone git@github.com:yashpatle741/main-project-gitops.git .
+
+                    sed -i 's|image: yashpatle99/skillpulse-backend:.*|image: yashpatle99/skillpulse-backend:${BUILD_NUMBER}|' k8s/backend/Deployment.yaml
+
+                    sed -i 's|image: yashpatle99/skillpulse-frontend:.*|image: yashpatle99/skillpulse-frontend:${BUILD_NUMBER}|' k8s/frontend/Deployment.yaml
+
+                    git config user.name "Jenkins"
+                    git config user.email "jenkins@local"
+
+                    git add .
+
+                    git diff --cached --quiet || git commit -m "Update images to build ${BUILD_NUMBER}"
+
+                    git push origin main
+                """
+            }
+
         }
     }
 }
-stage('Updates GitOps Repository') {
-    steps {
-        dir('gitops') {
-            deleteDir()
-
-            sh """
-                git clone git@github.com:yashpatle741/main-project-gitops.git .
-
-                sed -i 's|image: yashpatle99/skillpulse-backend:.*|image: yashpatle99/skillpulse-backend:${BUILD_NUMBER}|' k8s/backend/Deployment.yaml
-
-                sed -i 's|image: yashpatle99/skillpulse-frontend:.*|image: yashpatle99/skillpulse-frontend:${BUILD_NUMBER}|' k8s/frontend/Deployment.yaml
-
-                git config user.name "Jenkins"
-                git config user.email "jenkins@local"
-
-                git add .
-
-                git diff --cached --quiet || git commit -m "Update images to build ${BUILD_NUMBER}"
-
-                git push origin main
-            """
-        }
-    }
-}
-      
-    }
 }
