@@ -47,6 +47,7 @@
     - role: ingress-nginx
       when: install_ingress_nginx | default(true)
       tags: [ingress-nginx]
+      
     - role: prometheus
       tags: [prometheus]
 

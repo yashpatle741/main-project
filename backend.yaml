@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/tracking-id: skillpulse:apps/Deployment:skillpulse/backend
+    deployment.kubernetes.io/revision: "3"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"skillpulse:apps/Deployment:skillpulse/backend"},"name":"backend","namespace":"skillpulse"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"backend"}},"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":1},"type":"RollingUpdate"},"template":{"metadata":{"labels":{"app":"backend"}},"spec":{"containers":[{"env":[{"name":"DB_HOST","value":"mysql"},{"name":"DB_PORT","value":"3306"},{"name":"PORT","value":"8080"},{"name":"DB_USER","valueFrom":{"secretKeyRef":{"key":"MYSQL_USER","name":"skillpulse-db"}}},{"name":"DB_PASSWORD","valueFrom":{"secretKeyRef":{"key":"MYSQL_PASSWORD","name":"skillpulse-db"}}},{"name":"DB_NAME","valueFrom":{"secretKeyRef":{"key":"MYSQL_DATABASE","name":"skillpulse-db"}}}],"image":"yashpatle99/skillpulse-backend:4","imagePullPolicy":"Always","livenessProbe":{"httpGet":{"path":"/health","port":8080},"initialDelaySeconds":15,"periodSeconds":10},"name":"backend","ports":[{"containerPort":8080,"name":"http"}],"readinessProbe":{"httpGet":{"path":"/health","port":8080},"initialDelaySeconds":5,"periodSeconds":5},"resources":{"limits":{"memory":"128Mi"},"requests":{"cpu":"100m","memory":"64Mi"}}}]}}}}
+  creationTimestamp: "2026-06-26T09:09:11Z"
+  generation: 3
+  name: backend
+  namespace: skillpulse
+  resourceVersion: "201423"
+  uid: 64788c08-b55b-4e27-884f-3ba0ee936908
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: backend
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - env:
+        - name: DB_HOST
+          value: mysql
+        - name: DB_PORT
+          value: "3306"
+        - name: PORT
+          value: "8080"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_USER
+              name: skillpulse-db
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_PASSWORD
+              name: skillpulse-db
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_DATABASE
+              name: skillpulse-db
+        image: yashpatle99/skillpulse-backend:4
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: backend
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2026-06-26T09:09:11Z"
+    lastUpdateTime: "2026-06-26T09:09:11Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-06-26T09:09:11Z"
+    lastUpdateTime: "2026-07-01T15:02:19Z"
+    message: ReplicaSet "backend-b89db956f" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 3
+  readyReplicas: 1
+  replicas: 1
+  terminatingReplicas: 0
+  updatedReplicas: 1
