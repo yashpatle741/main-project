@@ -169,7 +169,7 @@ pipeline {
         }
     }
 }
-stage('Update GitOps Repository') {
+stage('Updates GitOps Repository') {
     steps {
         dir('gitops') {
             deleteDir()
