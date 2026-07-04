@@ -169,7 +169,7 @@ pipeline {
         }
     }
 }
-stage('Update GitOps Repository') {
+stage('Updat GitOps Repository') {
     steps {
         sshagent(credentials: ['github-ssh']) {
 
