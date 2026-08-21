@@ -27,7 +27,32 @@ class ClusterMonitor:
             namespace = pod.metadata.namespace
             pod_name = pod.metadata.name
 
+            if pod.status.container_statuses:
+
+                error_found = False
+
+                for container in pod.status.container_statuses:
+
+                    waiting = container.state.waiting
+
+                    if waiting and waiting.reason in self.ERROR_STATES:
+
+                        incidents.append(
+                            Incident(
+                                namespace=namespace,
+                                pod=pod_name,
+                                issue=waiting.reason,
+                            )
+                        )
+
+                        error_found = True
+                        break
+
+                if error_found:
+                    continue
+
             if pod.status.phase == "Pending":
+
                 incidents.append(
                     Incident(
                         namespace=namespace,
@@ -35,22 +60,5 @@ class ClusterMonitor:
                         issue="Pending",
                     )
                 )
-
-            if not pod.status.container_statuses:
-                continue
-
-            for container in pod.status.container_statuses:
-
-                waiting = container.state.waiting
-
-                if waiting and waiting.reason in self.ERROR_STATES:
-
-                    incidents.append(
-                        Incident(
-                            namespace=namespace,
-                            pod=pod_name,
-                            issue=waiting.reason,
-                        )
-                    )
 
         return incidents

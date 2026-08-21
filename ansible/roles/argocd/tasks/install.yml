@@ -70,6 +70,8 @@
       - --create-namespace
       - --version
       - "{{ argocd_chart_version }}"
+      - --set
+      - configs.params.server\.insecure=true
   register: argocd_install
   changed_when: >-
     'STATUS: deployed' in (argocd_install.stdout | default('')) or

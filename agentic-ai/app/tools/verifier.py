@@ -10,23 +10,31 @@ class Verifier:
 
         time.sleep(10)
 
-        pod = self.kube_client.read_namespaced_pod(
-            name=pod_name,
-            namespace=namespace,
-        )
+        pods = self.kube_client.list_namespaced_pod(namespace=namespace)
 
-        phase = pod.status.phase
+        for pod in pods.items:
 
-        ready = False
+            if not pod.metadata.name.startswith(pod_name.rsplit("-", 2)[0]):
+                continue
 
-        if pod.status.container_statuses:
-            ready = all(
-                container.ready
-                for container in pod.status.container_statuses
-            )
+            phase = pod.status.phase
+
+            ready = False
+
+            if pod.status.container_statuses:
+                ready = all(
+                    container.ready
+                    for container in pod.status.container_statuses
+                )
+
+            return {
+                "phase": phase,
+                "ready": ready,
+                "healthy": phase == "Running" and ready,
+            }
 
         return {
-            "phase": phase,
-            "ready": ready,
-            "healthy": phase == "Running" and ready,
+            "phase": "NotFound",
+            "ready": False,
+            "healthy": False,
         }

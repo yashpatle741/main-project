@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  role_name: agentic-ai
+  author: SkillPulse
+  description: Deploy the Agentic AI Python application directly on Ubuntu hosts.
+  company: SkillPulse
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - "22.04"
+        - "24.04"
+        - "26.04"
+  galaxy_tags:
+    - agentic-ai
+    - python
+    - systemd
+    - ubuntu
+    - skillpulse
+
+dependencies: []

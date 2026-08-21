@@ -1,0 +1,90 @@
+---
+- name: Verify operating system support
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_release in agentic_ai_supported_releases
+    fail_msg: "This role supports Ubuntu Jammy, Noble, and Resolute only."
+    success_msg: "Operating system support validated for Ubuntu."
+
+- name: Install Python runtime packages
+  ansible.builtin.apt:
+    name: "{{ agentic_ai_python_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure the Agentic AI application directory exists
+  ansible.builtin.file:
+    path: "{{ agentic_ai_app_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Synchronize Agentic AI project
+  ansible.posix.synchronize:
+    src: "{{ playbook_dir }}/../../agentic-ai/"
+    dest: "{{ agentic_ai_app_dir }}/"
+    delete: true
+    recursive: true
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=.venv"
+      - "--exclude=venv"
+      - "--exclude=__pycache__"
+      - "--exclude=.pytest_cache"
+
+- name: Ensure the Agentic AI application directory ownership is correct
+  ansible.builtin.file:
+    path: "{{ agentic_ai_app_dir }}"
+    state: directory
+    owner: "{{ agentic_ai_service_user }}"
+    group: "{{ agentic_ai_service_group }}"
+    mode: "0755"
+
+- name: Create the Agentic AI virtual environment
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -m
+      - venv
+      - "{{ agentic_ai_venv_dir }}"
+    creates: "{{ agentic_ai_venv_dir }}/bin/python"
+
+- name: Ensure the Agentic AI virtual environment ownership is correct
+  ansible.builtin.file:
+    path: "{{ agentic_ai_venv_dir }}"
+    state: directory
+    owner: "{{ agentic_ai_service_user }}"
+    group: "{{ agentic_ai_service_group }}"
+    mode: "0755"
+
+- name: Upgrade pip inside the virtual environment
+  ansible.builtin.pip:
+    executable: "{{ agentic_ai_venv_dir }}/bin/pip"
+    name: pip
+    state: latest
+
+- name: Install Agentic AI Python dependencies
+  ansible.builtin.pip:
+    executable: "{{ agentic_ai_venv_dir }}/bin/pip"
+    requirements: "{{ agentic_ai_app_dir }}/requirements.txt"
+    state: present
+
+- name: Create the Agentic AI systemd service unit
+  ansible.builtin.template:
+    src: agentic-ai.service.j2
+    dest: "{{ agentic_ai_service_file }}"
+    mode: "0644"
+
+- name: Reload systemd configuration
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable the Agentic AI service
+  ansible.builtin.service:
+    name: "{{ agentic_ai_service_name }}"
+    enabled: true
+
+- name: Start the Agentic AI service
+  ansible.builtin.service:
+    name: "{{ agentic_ai_service_name }}"
+    state: started

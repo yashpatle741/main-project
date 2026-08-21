@@ -1,0 +1,17 @@
+[Unit]
+Description=Agentic AI Service
+After=network.target
+
+[Service]
+Type=simple
+User={{ agentic_ai_service_user }}
+Group={{ agentic_ai_service_group }}
+WorkingDirectory={{ agentic_ai_app_dir }}/app
+Environment=PATH={{ agentic_ai_venv_dir }}/bin:/usr/bin:/bin
+Environment=KUBECONFIG={{ agentic_ai_kubeconfig_path }}
+ExecStart={{ agentic_ai_venv_dir }}/bin/python {{ agentic_ai_app_dir }}/app/main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

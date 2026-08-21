@@ -1,0 +1,11 @@
+---
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Assert Agentic AI service is running
+  ansible.builtin.assert:
+    that:
+      - (agentic_ai_service_name ~ '.service') in services
+      - services[agentic_ai_service_name ~ '.service'].state == 'running'
+    fail_msg: "Agentic AI service is not running."
+    success_msg: "Agentic AI service is running successfully."

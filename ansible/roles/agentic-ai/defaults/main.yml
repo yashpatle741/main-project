@@ -1,0 +1,19 @@
+---
+agentic_ai_supported_releases:
+  - "jammy"
+  - "noble"
+  - "resolute"
+
+agentic_ai_python_packages:
+  - python3
+  - python3-venv
+  - python3-pip
+
+agentic_ai_service_name: "agentic-ai"
+agentic_ai_service_user: "{{ ansible_user | default('ubuntu') }}"
+agentic_ai_service_group: "{{ agentic_ai_service_user }}"
+agentic_ai_app_dir: "/opt/agentic-ai"
+agentic_ai_venv_dir: "{{ agentic_ai_app_dir }}/.venv"
+agentic_ai_service_file: "/etc/systemd/system/{{ agentic_ai_service_name }}.service"
+agentic_ai_service_home: "/home/{{ agentic_ai_service_user }}"
+agentic_ai_kubeconfig_path: "{{ agentic_ai_service_home }}/.kube/config"

@@ -1,0 +1,9 @@
+---
+- name: Gather system facts
+  ansible.builtin.setup:
+
+- name: Import Agentic AI installation tasks
+  ansible.builtin.import_tasks: install.yml
+
+- name: Import Agentic AI verification tasks
+  ansible.builtin.import_tasks: verify.yml

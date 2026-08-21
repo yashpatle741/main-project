@@ -187,6 +187,7 @@ stage('Update GitOps Repository') {
                     git config user.email "jenkins@local"
 
                     git add .
+                    
 
                     git diff --cached --quiet || git commit -m "Update images to build ${BUILD_NUMBER}"
 

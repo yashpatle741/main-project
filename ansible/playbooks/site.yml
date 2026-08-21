@@ -44,6 +44,10 @@
       when: install_skillpulse | default(true)
       tags: [skillpulse]
 
+    - role: agentic-ai
+      when: install_agentic_ai | default(true)
+      tags: [agentic-ai]
+
     - role: ingress-nginx
       when: install_ingress_nginx | default(true)
       tags: [ingress-nginx]
@@ -53,3 +57,5 @@
 
     - role: grafana
       tags: [grafana]
+      
+    
